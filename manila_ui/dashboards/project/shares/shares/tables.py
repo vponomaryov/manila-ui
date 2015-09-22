@@ -224,8 +224,19 @@ class ManageRules(tables.LinkAction):
     name = "manage_rules"
     verbose_name = _("Manage Rules")
     url = "horizon:project:shares:manage_rules"
-    classes = ("btn-edit", )
+    classes = ("btn-edit",)
     policy_rules = (("share", "share:access_get_all"),)
+
+
+class ManageReplicas(tables.LinkAction):
+    name = "manage_replicas"
+    verbose_name = _("Manage Replicas")
+    url = "horizon:project:shares:manage_replicas"
+    classes = ("btn-edit",)
+    policy_rules = (("share", "share:replica_get_all"),)
+
+    def allowed(self, request, *args, **kwargs):
+        return manila.is_replication_enabled()
 
 
 class AddRule(tables.LinkAction):
@@ -315,4 +326,5 @@ class SharesTable(SharesTableBase):
         row_class = UpdateRow
         table_actions = (CreateShare, DeleteShare, SharesFilterAction)
         row_actions = (EditShare, ExtendShare, snapshot_tables.CreateSnapshot,
-                       DeleteShare, ManageRules, EditShareMetadata)
+                       DeleteShare, ManageRules, ManageReplicas,
+                       EditShareMetadata)

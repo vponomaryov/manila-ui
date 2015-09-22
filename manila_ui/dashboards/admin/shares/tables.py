@@ -149,6 +149,17 @@ class SharesFilterAction(tables.FilterAction):
                 if q in share.name.lower()]
 
 
+class ManageReplicas(tables.LinkAction):
+    name = "manage_replicas"
+    verbose_name = _("Manage Replicas")
+    url = "horizon:admin:shares:manage_replicas"
+    classes = ("btn-edit",)
+    policy_rules = (("share", "share:replica_get_all"),)
+
+    def allowed(self, request, *args, **kwargs):
+        return manila.is_replication_enabled()
+
+
 class SharesTable(shares_tables.SharesTable):
     name = tables.Column("name",
                          verbose_name=_("Name"),
@@ -178,8 +189,9 @@ class SharesTable(shares_tables.SharesTable):
             SharesFilterAction,
         )
         row_actions = (
-            shares_tables.DeleteShare,
+            ManageReplicas,
             UnmanageShareAction,
+            shares_tables.DeleteShare,
         )
         columns = (
             'tenant', 'host', 'name', 'size', 'status', 'visibility',
