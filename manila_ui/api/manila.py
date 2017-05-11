@@ -80,16 +80,18 @@ def share_get(request, share_id):
 
 def share_create(request, size, name, description, proto, snapshot_id=None,
                  metadata=None, share_network=None, share_type=None,
-                 is_public=None, availability_zone=None):
+                 is_public=None, availability_zone=None, share_group_id=None):
     return manilaclient(request).shares.create(
         proto, size, name=name, description=description,
         share_network=share_network, snapshot_id=snapshot_id,
         metadata=metadata, share_type=share_type, is_public=is_public,
-        availability_zone=availability_zone)
+        availability_zone=availability_zone,
+        share_group_id=share_group_id,
+    )
 
 
-def share_delete(request, share_id):
-    return manilaclient(request).shares.delete(share_id)
+def share_delete(request, share_id, share_group_id=None):
+    return manilaclient(request).shares.delete(share_id, share_group_id)
 
 
 def share_update(request, share_id, name, description, is_public=''):
@@ -479,6 +481,154 @@ def availability_zone_list(request):
 
 def pool_list(request, detailed=False):
     return manilaclient(request).pools.list(detailed=detailed)
+
+
+######## Share Groups ########
+
+def share_group_create(request, name, description=None,
+                       share_group_type=None,
+                       share_types=None,
+                       share_network=None,
+                       source_share_group_snapshot=None,
+                       availability_zone=None):
+    return manilaclient(request).share_groups.create(
+        name=name,
+        description=description,
+        share_group_type=share_group_type,
+        share_types=share_types,
+        share_network=share_network,
+        source_share_group_snapshot=source_share_group_snapshot,
+        availability_zone=availability_zone,
+    )
+
+
+def share_group_get(request, share_group):
+    return manilaclient(request).share_groups.get(share_group)
+
+
+def share_group_update(request, share_group, name, description):
+    return manilaclient(request).share_groups.update(
+        share_group,
+        name=name,
+        description=description,
+    )
+
+
+def share_group_delete(request, share_group, force=False):
+    return manilaclient(request).share_groups.delete(share_group, force=force)
+
+
+def share_group_reset_state(request, share_group, state):
+    return manilaclient(request).share_groups.reset_state(share_group, state)
+
+
+def share_group_list(request, detailed=True, search_opts=None, sort_key=None,
+                     sort_dir=None):
+    return manilaclient(request).share_groups.list(
+        detailed=detailed,
+        search_opts=search_opts,
+        sort_key=sort_key,
+        sort_dir=sort_dir,
+    )
+
+
+######## Share Group Snapshots ########
+
+def share_group_snapshot_create(request, share_group, name, description=None):
+    return manilaclient(request).share_group_snapshots.create(
+        share_group=share_group,
+        name=name,
+        description=description,
+    )
+
+def share_group_snapshot_get(request, share_group_snapshot):
+    return manilaclient(request).share_group_snapshots.get(
+        share_group_snapshot)
+
+
+def share_group_snapshot_update(request, share_group_snapshot, name,
+                                description):
+    return manilaclient(request).share_group_snapshots.update(
+        share_group_snapshot,
+        name=name,
+        description=description,
+    )
+
+
+def share_group_snapshot_delete(request, share_group_snapshot, force=False):
+    return manilaclient(request).share_group_snapshots.delete(
+        share_group_snapshot)
+
+
+def share_group_snapshot_reset_state(request, share_group_snapshot, state):
+    return manilaclient(request).share_group_snapshots.reset_state(
+        share_group_snapshot, state)
+
+
+def share_group_snapshot_list(request):
+    return manilaclient(request).share_group_snapshots.list(
+        detailed=detailed,
+        search_opts=search_opts,
+        sort_key=sort_key,
+        sort_dir=sort_dir,
+    )
+
+
+######## Share Group Types ########
+
+def share_group_type_create(request, name, share_types, is_public=False,
+                            group_specs=None):
+    return manilaclient(request).share_group_types.create(
+        name=name, share_types=share_types, is_public=is_public,
+        group_specs=group_specs)
+
+def share_group_type_get(request, share_group_type):
+    return manilaclient(request).share_group_types.get(share_group_type)
+
+
+def share_group_type_list(request, show_all=True):
+    return manilaclient(request).share_group_types.list(show_all=show_all)
+
+
+def share_group_type_delete(request, share_group_type):
+    return manilaclient(request).share_group_types.delete(share_group_type)
+
+
+def share_group_type_access_list(request, share_group_type):
+    return manilaclient(request).share_group_type_access.list(share_group_type)
+
+
+def share_group_type_access_add(request, share_group_type, project):
+    return manilaclient(request).share_group_type_access(
+        share_group_type, project)
+
+
+def share_group_type_access_remove(request, share_group_type, project):
+    return manilaclient(request).share_group_type_access(
+        share_group_type, project)
+
+
+def share_group_type_set_specs(request, share_group_type, group_specs):
+    return manilaclient(request).share_group_types.get(
+        share_group_type).set_keys(group_specs)
+
+
+def share_group_type_unset_specs(request, share_group_type, keys):
+    return manilaclient(request).share_group_types.get(
+        share_group_type).unset_keys(keys)
+
+
+def share_group_type_get_specs(request, share_group_type):
+    return manilaclient(request).share_group_types.get(
+        share_group_type).get_keys()
+
+
+######## Feature enablement checkers ########
+
+@memoized
+def is_share_groups_enabled():
+    manila_config = getattr(settings, 'OPENSTACK_MANILA_FEATURES', {})
+    return manila_config.get('enable_share_groups', True)
 
 
 @memoized
